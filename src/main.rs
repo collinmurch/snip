@@ -39,11 +39,12 @@ impl Arguments {
                 if let Ok(mut file) = File::open(f) {
                     let mut text = String::new();
 
-                    file.read_to_string(&mut text);
-
-                    return Ok(Arguments{text, flag, delimiter});
+                    match file.read_to_string(&mut text) {
+                        Ok(_) => return Ok(Arguments{text, flag, delimiter}),
+                        Err(_) => return Err("could not parse file"),
+                    };
                 } else {
-                    return Err("could not read file");
+                    return Err("could not find file");
                 }
             } else {
                 flag = args[3].clone();
@@ -54,17 +55,21 @@ impl Arguments {
         // If user is using stdin 
         } else {
             let input = stdin();
-            input.read_line(&mut text);
+            match input.read_line(&mut text) {
+                Ok(_) => {
+                    if args.len() == 2 {
+                        return Err("stdin supplied, but too many arguments")
+                    }
+                },
+                Err(_) => return Err("could not read stdin"),
+            };
 
             if args.len() == 1 {
                 delimiter = String::from(" ");
 
                 return Ok(Arguments{text, flag, delimiter})
             }
-            else if args.len() == 2 {
-                return Err("stdin supplied, but too many arguments")
-            }
-
+            
             return Ok(Arguments{text, flag, delimiter})
         }
     }
