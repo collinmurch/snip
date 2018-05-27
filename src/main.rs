@@ -16,40 +16,47 @@ struct Arguments {
 
 impl Arguments {
     fn new(args: &[String]) -> Result<Arguments, &'static str> {
-        let mut flag = args[1].clone();
-        
         if args.len() > 4 {
             return Err("too many arguments");
         }
-        else if flag.contains("-h") || flag.contains("-help") {
-            return Err("help")
-        }
 
+        let mut delimiter = String::from(" ");
         let mut text = String::new();
-        let mut delimiter = String::new();
-
+        let mut flag = if args.len() > 1 {
+            args[1].clone()
+        } else {
+            String::new()
+        };
+        
+        if flag.contains("-h") || flag.contains("-help") {
+            return Err("help");
+        }
+    
         // If user is using a file (stdin is empty)
         if stdin_isatty() {
             if args.len() < 2 || args.len() == 3 {
                 return Err("no stdin supplied")
             }
-            else if args.len() == 2 {
-                let f = args[1].clone();
-                
-                if let Ok(mut file) = File::open(f) {
-                    let mut text = String::new();
 
-                    match file.read_to_string(&mut text) {
-                        Ok(_) => return Ok(Arguments{text, flag, delimiter}),
-                        Err(_) => return Err("could not parse file"),
-                    };
-                } else {
-                    return Err("could not find file");
-                }
+            let f = if args.len() == 2 {
+                args[1].clone()       
             } else {
-                flag = args[3].clone();
+                flag = args[1].clone();
+                delimiter = args[2].clone();
 
-                return Ok(Arguments{text, flag, delimiter})
+                args[3].clone()
+            };
+
+
+            if let Ok(mut file) = File::open(f) {
+                let mut text = String::new();
+
+                match file.read_to_string(&mut text) {
+                    Ok(_) => return Ok(Arguments{text, flag, delimiter}),
+                    Err(_) => return Err("could not parse file"),
+                };
+            } else {
+                return Err("could not find file");
             }
 
         // If user is using stdin 
@@ -68,9 +75,14 @@ impl Arguments {
                 delimiter = String::from(" ");
 
                 return Ok(Arguments{text, flag, delimiter})
+            } 
+            else {
+                flag = args[1].clone();
+
+                delimiter = args[2].clone();
+
+                return Ok(Arguments{text, flag, delimiter});
             }
-            
-            return Ok(Arguments{text, flag, delimiter})
         }
     }
 }
@@ -84,9 +96,11 @@ fn main() {
                 println!("TO DO.");
                 exit(0);
             } else {
-                eprintln!("Problem parsing arguments {}", err);
+                eprintln!("Problem parsing arguments: {}", err);
                 exit(0);
             }
         }
     );
+
+    println!("{}, {}, {}", arguments.delimiter, arguments.text, arguments.flag);
 }
