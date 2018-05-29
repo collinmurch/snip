@@ -87,6 +87,18 @@ impl Arguments {
     }
 }
 
+fn snip(text: String, delimiter: &str) -> Vec<String> {
+    let split: Vec<&str> = text.split(delimiter).collect();
+
+    let mut new: Vec<String> = Vec::new();
+
+    for item in split {
+        new.push(item.to_string());
+    }
+
+    return new;
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -102,5 +114,10 @@ fn main() {
         }
     );
 
-    println!("{}, {}, {}", arguments.delimiter, arguments.text, arguments.flag);
+    let cut: Vec<String> = snip(arguments.text, &arguments.delimiter[..]);
+
+    println!("RESULTS: ");
+    for item in cut {
+        println!("{}", item);
+    }
 }
